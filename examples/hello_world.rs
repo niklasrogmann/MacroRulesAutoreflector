@@ -87,7 +87,7 @@ fn main() {
     // TODO: use macro here
 
 
-    // the macro can of course also be used directly, as if called from the reflector
+    // use the macro directly, as if called from the reflector
     // this is here for debugging purposes and to show internal workings
     // 
     for_each_field!([a_bool, bool, _,]; my_data);
