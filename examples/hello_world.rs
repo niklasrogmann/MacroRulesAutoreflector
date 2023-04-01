@@ -26,7 +26,7 @@ struct MyData {
 /// with a bunch of parameters to allow catching specific information
 /// about fields
 /// this example is intended for copy pasta
-macro_rules! print_each_field {
+macro_rules! print_a_field {
     // the "$(, $params : tt)*" skips any further field or meta information and is mandatory
     // to keep up with additional reflection data becoming available in future versions of this crate
     ([$field : ident, $field_ty : ty], [$field_string : expr, $field_ty_string : expr] $(, $params : tt)*; $my_ident_param : ident) => {
@@ -36,9 +36,10 @@ macro_rules! print_each_field {
 
 /// this example shows how to match / capture information
 /// it also allows adding custom parameters, here: "$my_ident_param"
-/// everything autoreflection related is contained in "[field,field_ty],[field_string,field_ty_string],[meta...]; "
-macro_rules! for_each_field {
-    // match bools and capture their names    $($_ : tt,)*
+/// everything autoreflection related is contained in "[field,field_ty],[field_string,field_ty_string],[meta...];"
+/// with custom parameters added after the ";"
+macro_rules! match_field_information_and_do_things {
+    // match bools and capture their names
     ([$field : ident, bool], [$field_string : expr, $field_ty_string : expr] $(, $params : tt)*; $my_ident_param : ident) => {
         // field_ty_string will always be "bool" here
         println!("{} is a {} and is {}", $field_string, $field_ty_string, $my_ident_param.$field);
@@ -116,31 +117,31 @@ fn main() {
     // this is here for debugging purposes and to show internal workings
     // 
     println!("#### print test:");
-    print_each_field!([some_text, String],["some_text", "String"]; my_data);
-    print_each_field!([a_bool, bool], ["a_bool", "bool"]; my_data);
+    print_a_field!([some_text, String],["some_text", "String"]; my_data);
+    print_a_field!([a_bool, bool], ["a_bool", "bool"]; my_data);
     // see if the u64 specific match catches on or leads to a runtime crash
-    print_each_field!([an_u64, u64], ["an_u64", "u64"], [u, 64]; my_data);
-    print_each_field!([an_u8, u8], ["an_u8", "u8"], [u, 16]; my_data);
-    print_each_field!([an_i8, i8], ["an_i8", "i8"],[i, 8]; my_data);
-    print_each_field!([an_i16, i16], ["an_i16", "i16"], [i, 16]; my_data);
-    print_each_field!([a_f32, f32], ["a_f32", "f32"], [f, 32]; my_data);
-    print_each_field!([a_f64, f64], ["a_f64", "f64"], [f, 64]; my_data);
-    print_each_field!([more_text, String], ["more_text", "String"]; my_data);
+    print_a_field!([an_u64, u64], ["an_u64", "u64"], [u, 64]; my_data);
+    print_a_field!([an_u8, u8], ["an_u8", "u8"], [u, 16]; my_data);
+    print_a_field!([an_i8, i8], ["an_i8", "i8"],[i, 8]; my_data);
+    print_a_field!([an_i16, i16], ["an_i16", "i16"], [i, 16]; my_data);
+    print_a_field!([a_f32, f32], ["a_f32", "f32"], [f, 32]; my_data);
+    print_a_field!([a_f64, f64], ["a_f64", "f64"], [f, 64]; my_data);
+    print_a_field!([more_text, String], ["more_text", "String"]; my_data);
     // option does not impl fmt::Display and does not compile
     //print_each_field!([optional_thing, Option<String>], ["optional_thing", "Option<String>"]; my_data);
-    
+
     println!("#### matching test:");
-    for_each_field!([some_text, String],["some_text", "String"]; my_data);
-    for_each_field!([a_bool, bool], ["a_bool", "bool"]; my_data);
+    match_field_information_and_do_things!([some_text, String],["some_text", "String"]; my_data);
+    match_field_information_and_do_things!([a_bool, bool], ["a_bool", "bool"]; my_data);
     // see if the u64 specific match catches on or leads to a runtime crash
-    for_each_field!([an_u64, u64], ["an_u64", "u64"], [u, 64]; my_data);
-    for_each_field!([an_u8, u8], ["an_u8", "u8"], [u, 16]; my_data);
-    for_each_field!([an_i8, i8], ["an_i8", "i8"],[i, 8]; my_data);
-    for_each_field!([an_i16, i16], ["an_i16", "i16"], [i, 16]; my_data);
-    for_each_field!([a_f32, f32], ["a_f32", "f32"], [f, 32]; my_data);
-    for_each_field!([a_f64, f64], ["a_f64", "f64"], [f, 64]; my_data);
-    for_each_field!([more_text, String], ["more_text", "String"]; my_data);
-    for_each_field!([optional_thing, Option<String>], ["optional_thing", "Option<String>"]; my_data);
+    match_field_information_and_do_things!([an_u64, u64], ["an_u64", "u64"], [u, 64]; my_data);
+    match_field_information_and_do_things!([an_u8, u8], ["an_u8", "u8"], [u, 16]; my_data);
+    match_field_information_and_do_things!([an_i8, i8], ["an_i8", "i8"],[i, 8]; my_data);
+    match_field_information_and_do_things!([an_i16, i16], ["an_i16", "i16"], [i, 16]; my_data);
+    match_field_information_and_do_things!([a_f32, f32], ["a_f32", "f32"], [f, 32]; my_data);
+    match_field_information_and_do_things!([a_f64, f64], ["a_f64", "f64"], [f, 64]; my_data);
+    match_field_information_and_do_things!([more_text, String], ["more_text", "String"]; my_data);
+    match_field_information_and_do_things!([optional_thing, Option<String>], ["optional_thing", "Option<String>"]; my_data);
     
     //fn_name();
 }

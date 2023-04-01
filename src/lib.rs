@@ -30,19 +30,8 @@ fn for_any_number(field_ident : Option<Ident>, field_ty : Type, num : (String, u
     }
 }
 
-
-
-// macro rule to pass along, this is an example
-/* #[proc_macro]
-pub fn match_ty_implementation_example( input : proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    quote!{
-        #input
-    }.into()
-} */
-
-
-// https://blog.turbo.fish/proc-macro-simple-derive/
+// useful: https://blog.turbo.fish/proc-macro-simple-derive/
+// check this out: https://github.com/jakobhellermann/bevy-inspector-egui/blob/be57f0d88a18984ad450b2a984d3d1b76105a376/crates/bevy-inspector-egui-derive/src/lib.rs#L21
 // TODO: generic capable
 #[proc_macro_derive(Autoreflect, attributes(set_for_field_derive))]
 pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -52,20 +41,6 @@ pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         Data::Struct(DataStruct { fields: Fields::Named(fields), .. }) => fields.named,
         _ => panic!("only works on structs with named fields"),
     };
-
-    /* Flex::column()
-        .with_child(
-            Slider::new()
-                .with_range(0.05, 0.95)
-                .with_step(0.10)
-                .lens(#input_ty::#field_name),
-        )
-        .with_spacer(4.0)
-        .with_child(Label::new(|data: &#input_ty, _: &_| {
-            format!("{:3.2}%", data.#field_name * 100.)
-    })) */
-
-
 
     // capture primitive number types with regex
     let any_num = Regex::new(r"^(u|i|f)([0-9]+)$").unwrap();
