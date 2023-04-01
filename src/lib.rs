@@ -11,23 +11,70 @@ use quote::{quote, ToTokens};
 // TODO: use https://docs.rs/regex/latest/regex/#modules
 use regex::Regex;
 
+struct MacroArgs {
+    field_ident : Ident,
+    field_ty : Type,
+    field_ident_string : String,
+    field_ty_string : String,
+    meta : Vec<Vec<TokenStream>>,
+    user_args : TokenStream
+}
 
+impl MacroArgs {
+    fn new(
+        field_ident: Ident,
+        field_ty: Type,
+        field_ident_string: String,
+        field_ty_string: String,
+    ) -> Self {
+        return MacroArgs{
+            field_ident,
+            field_ty,
+            field_ident_string,
+            field_ty_string,
+            meta: Vec::<Vec<TokenStream>>::new(),
+            user_args: TokenStream::new(),
+        }
+    }
+}
 
+fn write_into_macro_with_args(
+    macro_name : Ident,
+    field_ident : Ident, field_ty : Type,
+    field_ident_string : String, field_ty_string : String,
+    meta : Vec<Vec<TokenStream>>,
+    user_args : TokenStream ) -> TokenStream {
+    let expand_meta = meta.into_iter().map(|meta_in_bracket| {
+        let expand_meta_more = meta_in_bracket.into_iter().map(|meta_arg| {
+            return quote!(#meta_arg)
+            //#(#for_each_input_attr)*
+        });
+        return quote!(#(#expand_meta_more,)*)
+    });
+    return quote!(#macro_name!([#field_ident, #field_ty][#field_ident_string, #field_ty_string]#([#expand_meta])*; #user_args)).into()
+}
+
+/// numbers get additional data containing [i|u|f, number of bits]
 fn for_any_number(field_ident : Option<Ident>, field_ty : Type, num : (String, usize)) -> TokenStream {
     // testing, injection
     let field_name_to_string = ident_opt_to_to_string(&field_ident);
     let field_ty_string = field_ty.to_token_stream().to_string();
 
     let (str_ty,bits) = num;
+    let meta = 
+    /* quote!{
 
-    quote!{
+    } */
+    return write_into_macro_with_args()
+    // testcode
+    /* return quote!{
         println!("{} is {} of length {} bit and starts with {}",
-        #field_name_to_string,
-        #field_ty_string,
-        #bits,
-        #str_ty
-    );
-    }
+            #field_name_to_string,
+            #field_ty_string,
+            #bits,
+            #str_ty
+        )
+    }; */
 }
 
 // useful: https://blog.turbo.fish/proc-macro-simple-derive/
@@ -124,8 +171,8 @@ pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
                     let opt_num = capture_any_number(&field_ty_string);
                     let code_body = match field_ty_string.as_str() {
-                        "String" => { quote!{}}
-                        "bool" => {quote!{}}
+                        /* "String" => { quote!{}}
+                        "bool" => {quote!{}} */
                         _ if let Some(num) = opt_num => {
                             for_any_number( field_ident,  field_ty,   num )
                         }
