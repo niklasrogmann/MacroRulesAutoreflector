@@ -202,7 +202,7 @@ pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                         _ => {quote!{}}
                     };
                     quote! {
-                        println!("{} is {}", #field_name_to_string, #field_ty_string );
+                        //println!("{} is {}", #field_name_to_string, #field_ty_string );
                         #code_body
                         //println!("{}", #test );
                         
