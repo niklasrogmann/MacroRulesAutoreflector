@@ -38,12 +38,14 @@ impl MacroArgs {
     }
 }
 
-fn write_into_macro_with_args(
-    macro_name : Ident,
-    field_ident : Ident, field_ty : Type,
-    field_ident_string : String, field_ty_string : String,
-    meta : Vec<Vec<TokenStream>>,
-    user_args : TokenStream ) -> TokenStream {
+fn write_into_macro_with_args(macro_name : Ident,  macro_args : MacroArgs ) -> TokenStream {
+    let field_ident = macro_args.field_ident;
+    let field_ty = macro_args.field_ty;
+    let field_ident_string = macro_args.field_ident_string;
+    let field_ty_string = macro_args.field_ty_string;
+    let meta = macro_args.meta;
+    let user_args = macro_args.user_args;
+    
     let expand_meta = meta.into_iter().map(|meta_in_bracket| {
         let expand_meta_more = meta_in_bracket.into_iter().map(|meta_arg| {
             return quote!(#meta_arg)
@@ -52,10 +54,11 @@ fn write_into_macro_with_args(
         return quote!(#(#expand_meta_more,)*)
     });
     return quote!(#macro_name!([#field_ident, #field_ty][#field_ident_string, #field_ty_string]#([#expand_meta])*; #user_args)).into()
+
 }
 
 /// numbers get additional data containing [i|u|f, number of bits]
-fn for_any_number(field_ident : Option<Ident>, field_ty : Type, num : (String, usize)) -> TokenStream {
+/* fn for_any_number(field_ident : Option<Ident>, field_ty : Type, num : (String, usize)) -> TokenStream {
     // testing, injection
     let field_name_to_string = ident_opt_to_to_string(&field_ident);
     let field_ty_string = field_ty.to_token_stream().to_string();
@@ -75,13 +78,14 @@ fn for_any_number(field_ident : Option<Ident>, field_ty : Type, num : (String, u
             #str_ty
         )
     }; */
-}
+} */
 
 // useful: https://blog.turbo.fish/proc-macro-simple-derive/
 // check this out: https://github.com/jakobhellermann/bevy-inspector-egui/blob/be57f0d88a18984ad450b2a984d3d1b76105a376/crates/bevy-inspector-egui-derive/src/lib.rs#L21
 // TODO: generic capable
 #[proc_macro_derive(Autoreflect, attributes(set_for_field_derive))]
 pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+
     let input = parse_macro_input!(input as DeriveInput);
     let input_ty = input.ident;
     let fields = match input.data {
@@ -92,8 +96,7 @@ pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // capture primitive number types with regex
     let any_num = Regex::new(r"^(u|i|f)([0-9]+)$").unwrap();
     // capture bits as well
-    let capture_any_number = |field_ty_string : &String|
-        -> Option<(String, usize)> {
+    let capture_any_number = |field_ty_string : &String| -> Option<(String, usize)> {
         if let Some(num) = any_num.captures(&field_ty_string){
             Some((
                 num.get(1).unwrap().as_str().to_string(), // String
@@ -146,6 +149,7 @@ pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         let test = attr.to_token_stream().to_string();
         if let Ok(attr) = attr.meta.require_list(){
             if attr.path.is_ident("set_for_field_derive") {
+                // 
                 // take attributes from comma seperated list
                 // TODO: syn might have a better solution for this?
                 let mut tokens_iter : proc_macro2::token_stream::IntoIter = attr.tokens.clone().into_iter();
@@ -162,18 +166,37 @@ pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     // Interpolation only works for variables, not arbitrary expressions.
                     // That's why we need to move these fields into local variables first
                     // (borrowing would also work though).
-                    let field_ident = f.ident;
+
+                    // fill arguments
+                    let field_ident = f.ident.expect("has no field ident");
                     let field_ty = f.ty;
                     let field_attrs = f.attrs;
-                    // for using strings in code:
-                    let field_name_to_string = ident_opt_to_to_string(&field_ident);
+                    let field_ident_string = field_ident.to_token_stream().to_string();
                     let field_ty_string = field_ty.to_token_stream().to_string();
+                    let mut macro_args = MacroArgs::new(field_ident, field_ty, field_ident_string, field_ty_string);
 
+                    // for using strings in code:
+                    //let field_name_to_string = ident_opt_to_to_string(&field_ident);
                     let opt_num = capture_any_number(&field_ty_string);
+                    if let Some(num) = opt_num {
+                        let (str_ty,bits) = num;
+                        macro_args.meta.push(vec![str_ty.to_token_stream(), quote!(#bits)]);
+                        write_into_macro_with_args(, macro_args);
+                    } else {
+
+                    }
                     let code_body = match field_ty_string.as_str() {
                         /* "String" => { quote!{}}
                         "bool" => {quote!{}} */
                         _ if let Some(num) = opt_num => {
+                            let field_ty_string = field_ty.to_token_stream().to_string();
+
+                            let (str_ty,bits) = num;
+                            let meta = 
+                            /* quote!{
+
+                            } */
+                            return write_into_macro_with_args()
                             for_any_number( field_ident,  field_ty,   num )
                         }
                         _ => {quote!{}}
