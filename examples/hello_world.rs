@@ -23,10 +23,16 @@ struct MyData {
 }
 
 /// the autoreflector will call this macro for each field
-/// with a bunch of parameters to allow catching specific information
-/// about fields
+/// with arguments corresponding to fields
+/// which can be matched on and captured
 /// this example is intended for copy pasta
-macro_rules! print_a_field {
+macro_rules! make_print_fields {
+    // @body is called the very first time and should be used to encapsulate the generated code
+    (@body { $body : tt }) => {
+        fn print_fields() {
+            $body // generated code is inserted here
+        }
+    }
     // the "$([$params : tt])*" skips any further field or meta information and is mandatory
     // to keep up with additional reflection data becoming available in future versions of this crate
     ([$field : ident, $field_ty : ty][$field_string : expr, $field_ty_string : expr] $([$params : tt])*; $my_ident_param : ident) => {
