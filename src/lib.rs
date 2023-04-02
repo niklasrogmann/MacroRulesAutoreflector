@@ -4,6 +4,8 @@
 extern crate proc_macro;
 //use proc_macro::{TokenStream};
 use proc_macro2::{Ident, TokenStream};
+use syn::parse::Parser;
+use syn::punctuated::Punctuated;
 use syn::{parse_macro_input, DeriveInput, Data, DataStruct, Fields};
 use syn::*;
 use quote::{quote, ToTokens};
@@ -83,7 +85,7 @@ fn write_into_macro_with_args(macro_name : Ident,  macro_args : MacroArgs ) -> T
 // useful: https://blog.turbo.fish/proc-macro-simple-derive/
 // check this out: https://github.com/jakobhellermann/bevy-inspector-egui/blob/be57f0d88a18984ad450b2a984d3d1b76105a376/crates/bevy-inspector-egui-derive/src/lib.rs#L21
 // TODO: generic capable
-#[proc_macro_derive(Autoreflect, attributes(set_for_field_derive))]
+#[proc_macro_derive(Autoreflect, attributes(Autoreflect))]
 pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let input = parse_macro_input!(input as DeriveInput);
@@ -148,14 +150,19 @@ pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         let defaultmsg = "need set_for_field_derive(for_each_field, fn_name)";
         let test = attr.to_token_stream().to_string();
         if let Ok(attr) = attr.meta.require_list(){
-            if attr.path.is_ident("set_for_field_derive") {
+            if attr.path.is_ident("Autoreflect") {
                 // 
                 // take attributes from comma seperated list
                 // TODO: syn might have a better solution for this?
+                let mut comma_seperated_list_in_list = attr.tokens.clone().into();
+                let parser : Punctuated::<TokenStream, Token![,]> = Punctuated::<TokenStream, Token![,]>::parse_terminated.parse(comma_seperated_list_in_list).expect("could not parse");
+                // parser = syn::parse::<>(k).expect("could not parse");
+                //let test = parser[0];
+                
+
                 let mut tokens_iter : proc_macro2::token_stream::IntoIter = attr.tokens.clone().into_iter();
-                let for_each_field = tokens_iter.next().expect(defaultmsg);
-                assert! (tokens_iter.next().expect(defaultmsg).to_string() == ",", "missing ','");
-                let fn_name = tokens_iter.next().expect(defaultmsg);
+                let for_each_field = parser[0];
+                let fn_name = parser[1];
                 // debug
                 let _test_1 = for_each_field.to_string();
                 let _test_2 = fn_name.to_string();
@@ -225,15 +232,8 @@ pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         TokenStream::new()
     });
 
-    let output = quote!{
-        #(#for_each_input_attr)*
-        /* fn test_build() /* -> impl Widget<#input_ty> */ {
-            //#(#field_builders)*
-            println!("!!!!");
-            #(#input_attrs)*
-        } */
-    };
-    
+    // return all
+    let output = quote!(#(#for_each_input_attr)*);
     output.into()
 }
 

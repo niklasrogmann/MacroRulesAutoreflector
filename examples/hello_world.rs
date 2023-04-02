@@ -7,8 +7,8 @@ use macro_rules_autoreflector::Autoreflect;
 #[derive(Autoreflect)]
 // (macro_rules! macro), function name)
 // TODO: not function, should be macrorules as well to allow nesting and passing around params
-#[set_for_field_derive(print_each_field, asdfasdfadsf)]
-#[set_for_field_derive(for_each_field, fn_name)]
+#[Autoreflect(print_each_field, asdfasdfadsf)]
+#[Autoreflect(for_each_field, fn_name)]
 struct MyData {
     some_text: String,
     a_bool: bool,
