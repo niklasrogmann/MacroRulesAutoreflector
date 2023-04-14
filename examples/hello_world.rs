@@ -28,15 +28,19 @@ struct MyData {
 /// this example is intended for copy pasta
 macro_rules! make_print_fields {
     // @body is called the very first time and should be used to encapsulate the generated code
-    (@body { $body : tt }) => {
+    (@body { $tt_muncher_args : tt }) => {
         fn print_fields() {
-            $body // generated code is inserted here
+            make_print_fields($tt_muncher_args)
         }
     }
-    // the "$([$params : tt])*" skips any further field or meta information and is mandatory
+    // the "$([$discard : tt])*" skips any further field or meta information and is mandatory
+    // $(,$fields : tt)* keeps feeding the tt muncher
     // to keep up with additional reflection data becoming available in future versions of this crate
-    ([$field : ident, $field_ty : ty][$field_string : expr, $field_ty_string : expr] $([$params : tt])*; $my_ident_param : ident) => {
+    // TODO: tt muncher
+    ([$field : ident, $field_ty : ty][$field_string : expr, $field_ty_string : expr] $([$discard : tt])* $(,$fields : tt)*; $my_ident_param : ident) => {
         println!("field {} : {} = {}", $field_string, $field_ty_string, $my_ident_param.$field);
+        // keep iterating by feeding
+        make_print_fields($($fields)*; $my_ident_param)
     };
 }
 
