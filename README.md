@@ -1,5 +1,5 @@
 # MacroRulesAutoreflector
-a small compiletime reflection library for rust which creates a struct definition and wraps it into a <macro_rules!> macro which you supply to it.
+a small compiletime reflection library for rust which reads a struct definition and wraps it into a <macro_rules!> macro which you supply to it.
 the macro_rules! macro needs to be a tt muncher.
 
 reflecting on a struct and suppying it your macro_rules! macro called make_print_fields! (omitted, see hello_world.rs in examples)
