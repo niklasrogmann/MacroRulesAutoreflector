@@ -35,5 +35,5 @@ make_print_fields!(@body {
 });
 ```
 this cannot deal with generics
-TODO: remove syn/parse as it now works without it
-OR make it capable of reading generics
+
+TODO: remove syn/parse as it now works without it, OR make it capable of reading generics
