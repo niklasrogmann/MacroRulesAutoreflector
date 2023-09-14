@@ -7,21 +7,6 @@ use macro_rules_autoreflector::Autoreflect;
 
 
 
-#[derive(Autoreflect)]
-#[Autoreflect(print_each_field, asdfasdfadsf)]
-#[Autoreflect(for_each_field, fn_name)]
-struct MyData {
-    some_text: String,
-    a_bool: bool,
-    an_u64: u64,
-    an_u8: u8,
-    an_i8 : i8,
-    an_i16 : i16,
-    a_f32: f32,
-    a_f64: f64,
-    more_text: String,
-    optional_thing: Option<String>
-}
 
 /// the autoreflector will call this macro with data about each field
 /// which can be matched on and captured
@@ -56,13 +41,33 @@ macro_rules! make_print_fields {
     
 }
 
+
+
+
+
+#[derive(Autoreflect)]
+#[Autoreflect(make_print_fields)]
+//#[Autoreflect(for_each_field, fn_name)]
+struct MyData {
+    some_text: String,
+    a_bool: bool,
+    an_u64: u64,
+    an_u8: u8,
+    an_i8 : i8,
+    an_i16 : i16,
+    a_f32: f32,
+    a_f64: f64,
+    more_text: String,
+    optional_thing: Option<String>
+}
+
 //TODO: update to new standard of supplying info
 
 /// this example shows how to match / capture information
 /// it also allows adding custom parameters, here: "$my_ident_param"
 /// everything autoreflection related is contained in "[field,field_ty][field_string,field_ty_string][meta...];"
 /// with custom parameters added after the ";"
-macro_rules! match_field_information_and_do_things {
+/* macro_rules! match_field_information_and_do_things {
     // match bools and capture their names
     ([$field : ident, bool][$field_string : expr, $field_ty_string : expr] $([$params : tt])*; $my_ident_param : ident) => {
         // field_ty_string will always be "bool" here
@@ -116,10 +121,10 @@ macro_rules! match_field_information_and_do_things {
     ([$field : ident, $field_ty : ty][$field_string : expr, $field_ty_string : expr] $([$params : tt])*; $my_ident_param : ident) => {
         println!("unmatched field: {} : {}", $field_string, $field_ty_string);
     };
-}
+} */
 
 // a manual test, this is how your own macro will be called
-make_print_fields!(@body {
+/* make_print_fields!(@body {
     ([some_text, String]["some_text", "String"])
     ([a_bool, bool]["a_bool", "bool"])
     ([an_u64, u64]["an_u64", "u64"][u, 64])
@@ -130,10 +135,10 @@ make_print_fields!(@body {
     ([a_f64, f64]["a_f64", "f64"][f, 64])
     ([more_text, String]["more_text", "String"])
     ([optional_thing, Option<String>]["optional_thing", "Option<String>"])
-});
+}); */
 
 fn main() {
-    let mut my_data = MyData{
+    let my_data = MyData{
         some_text: "this is some text".to_string(),
         a_bool: true,
         an_u64: u64::MAX, // make adding a 1 crash this example

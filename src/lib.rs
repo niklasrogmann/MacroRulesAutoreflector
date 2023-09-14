@@ -1,5 +1,5 @@
-#![feature(if_let_guard)]
-#![feature(extend_one)]
+/* #![feature(if_let_guard)]
+#![feature(extend_one)] */
 
 extern crate proc_macro;
 //use proc_macro::{TokenStream};
@@ -38,26 +38,28 @@ impl MacroArgs {
             user_args: TokenStream::new(),
         }
     }
-}
 
-fn write_into_macro_with_args(macro_name : Ident,  macro_args : MacroArgs ) -> TokenStream {
-    let field_ident = macro_args.field_ident;
-    let field_ty = macro_args.field_ty;
-    let field_ident_string = macro_args.field_ident_string;
-    let field_ty_string = macro_args.field_ty_string;
-    let meta = macro_args.meta;
-    let user_args = macro_args.user_args;
-    
-    let expand_meta = meta.into_iter().map(|meta_in_bracket| {
-        let expand_meta_more = meta_in_bracket.into_iter().map(|meta_arg| {
-            return quote!(#meta_arg)
-            //#(#for_each_input_attr)*
+    fn as_macro_arguments_token_stream(self) -> TokenStream {
+        let field_ident = self.field_ident;
+        let field_ty = self.field_ty;
+        let field_ident_string = self.field_ident_string;
+        let field_ty_string = self.field_ty_string;
+        let meta = self.meta;
+        let user_args = self.user_args;
+        // meta brackets
+        let expand_meta = meta.into_iter().map(|meta_in_bracket| {
+            let expand_meta_more = meta_in_bracket.into_iter().map(|meta_arg| {
+                return quote!(#meta_arg)
+                //#(#for_each_input_attr)*
+            });
+            return quote!(#(#expand_meta_more,)*)
         });
-        return quote!(#(#expand_meta_more,)*)
-    });
-    return quote!(#macro_name!([#field_ident, #field_ty][#field_ident_string, #field_ty_string]#([#expand_meta])*; #user_args)).into()
-
+        //return quote!(#macro_name!([#field_ident, #field_ty][#field_ident_string, #field_ty_string]#([#expand_meta])*; #user_args)).into()
+        return quote!([#field_ident, #field_ty][#field_ident_string, #field_ty_string]#([#expand_meta])*; #user_args).into()
+    }
 }
+
+
 
 /// numbers get additional data containing [i|u|f, number of bits]
 /* fn for_any_number(field_ident : Option<Ident>, field_ty : Type, num : (String, usize)) -> TokenStream {
@@ -147,52 +149,52 @@ pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // check input attributes for all "need set_for_field_derive(for_each_field, fn_name)"
     // iterates over all attributes
     let for_each_input_attr = input.attrs.into_iter().map(|attr|{
-        let defaultmsg = "need set_for_field_derive(for_each_field, fn_name)";
+        let defaultmsg = "need Autoreflect(macro_rules!-name to call with field data)";
         let test = attr.to_token_stream().to_string();
         if let Ok(attr) = attr.meta.require_list(){
             if attr.path.is_ident("Autoreflect") {
                 // 
                 // take attributes from comma seperated list
                 // TODO: syn might have a better solution for this?
-                let mut comma_seperated_list_in_list = attr.tokens.clone().into();
+                let comma_seperated_list_in_list = attr.tokens.clone().into();
                 let parser : Punctuated::<TokenStream, Token![,]> = Punctuated::<TokenStream, Token![,]>::parse_terminated.parse(comma_seperated_list_in_list).expect("could not parse");
                 // parser = syn::parse::<>(k).expect("could not parse");
                 //let test = parser[0];
                 
 
-                let mut tokens_iter : proc_macro2::token_stream::IntoIter = attr.tokens.clone().into_iter();
-                let for_each_field = parser[0];
-                let fn_name = parser[1];
+                let tokens_iter : proc_macro2::token_stream::IntoIter = attr.tokens.clone().into_iter();
+                let macro_rules_name_to_call_with_data = &parser[0];
+                //let fn_name = parser[1];
                 // debug
-                let _test_1 = for_each_field.to_string();
-                let _test_2 = fn_name.to_string();
+                let _test_1 = macro_rules_name_to_call_with_data.to_string();
+                //let _test_2 = fn_name.to_string();
 
                 // goes here when a correct input has been found
                 // now needs to iterate over each field
-                let field_builders = fields.clone().into_iter().map(|f| {
+                let field_builders = fields.clone().into_iter().map(|field| {
                     // Interpolation only works for variables, not arbitrary expressions.
                     // That's why we need to move these fields into local variables first
                     // (borrowing would also work though).
 
                     // fill arguments
-                    let field_ident = f.ident.expect("has no field ident");
-                    let field_ty = f.ty;
-                    let field_attrs = f.attrs;
+                    let field_ident = field.ident.expect("has no field ident");
+                    let field_ty = field.ty;
+                    let field_attrs = field.attrs;
                     let field_ident_string = field_ident.to_token_stream().to_string();
                     let field_ty_string = field_ty.to_token_stream().to_string();
                     let mut macro_args = MacroArgs::new(field_ident, field_ty, field_ident_string, field_ty_string);
 
                     // for using strings in code:
                     //let field_name_to_string = ident_opt_to_to_string(&field_ident);
-                    let opt_num = capture_any_number(&field_ty_string);
+                    let opt_num = capture_any_number(&macro_args.field_ty_string);
                     if let Some(num) = opt_num {
                         let (str_ty,bits) = num;
                         macro_args.meta.push(vec![str_ty.to_token_stream(), quote!(#bits)]);
-                        write_into_macro_with_args(, macro_args);
+                        //write_into_macro_with_args(/* fn_name, */ macro_args);
                     } else {
 
                     }
-                    let code_body = match field_ty_string.as_str() {
+                    /* let code_body = match field_ty_string.as_str() {
                         /* "String" => { quote!{}}
                         "bool" => {quote!{}} */
                         _ if let Some(num) = opt_num => {
@@ -203,14 +205,20 @@ pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                             /* quote!{
 
                             } */
-                            return write_into_macro_with_args()
-                            for_any_number( field_ident,  field_ty,   num )
+                            return write_into_macro_with_args(macro_args);
+                            //for_any_number( field_ident,  field_ty,   num )
                         }
                         _ => {quote!{}}
-                    };
+                    }; */
+
+                    
+                    // TODO: user options
+                    // user options need to be per-field to pass down the line within the user supplied macro
+
+                    let per_field_data = macro_args.as_macro_arguments_token_stream();
                     quote! {
                         //println!("{} is {}", #field_name_to_string, #field_ty_string );
-                        #code_body
+                        ( #per_field_data )
                         //println!("{}", #test );
                         
                         /* #field_name.(&self) -> &#field_ty {
@@ -221,14 +229,12 @@ pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 
                 // return fn implementation
                 return quote!{
-                    //println!("test idents: {}   {}", #_test_1,#_test_2);
-                    fn #fn_name (){
+                    #macro_rules_name_to_call_with_data!(@body {
                         #(#field_builders)*
-                    }
+                    });
                 }.into()
             }
         }
-        //if test.starts_with("#[set_for_field_derive(");
         TokenStream::new()
     });
 
@@ -249,6 +255,7 @@ fn ident_opt_to_to_string(ident : &Option<proc_macro2::Ident>) -> proc_macro2::T
 
 
 // TODO: learn how this works
+/*
 fn extract_type_from_option(ty: &syn::Type) -> Option<&syn::Type> {
     use syn::{GenericArgument, Path, PathArguments, PathSegment};
 
@@ -293,3 +300,4 @@ fn extract_type_from_option(ty: &syn::Type) -> Option<&syn::Type> {
         })
 }
 
+ */
