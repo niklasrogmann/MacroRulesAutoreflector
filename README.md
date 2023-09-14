@@ -34,6 +34,6 @@ make_print_fields!(@body {
     ([optional_thing, Option<String>]["optional_thing", "Option<String>"])
 });
 ```
-this cannot deal with generics
+this cannot deal with generics (directly)
 
-TODO: remove syn/parse as it now works without it, OR make it capable of reading generics
+TODO: need to think about generics and how to supply it to your macro...
