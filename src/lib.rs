@@ -244,14 +244,14 @@ pub fn autoreflect(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 }
 
 
-/// when field name is an option, this unwraps this safely
-/// note that f.ident is None on tuples
-fn ident_opt_to_to_string(ident : &Option<proc_macro2::Ident>) -> proc_macro2::TokenStream {
+// when field name is an option, this unwraps this safely
+// note that f.ident is None on tuples
+/* fn ident_opt_to_to_string(ident : &Option<proc_macro2::Ident>) -> proc_macro2::TokenStream {
     match ident {
         Some(field_name) => format!("\"{}\".to_string()", field_name.to_string()).parse().expect("ident err"),
         None => format!("\"_\".to_string()").parse().expect("ident err")
     }
-}
+} */
 
 
 // TODO: learn how this works
